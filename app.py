@@ -1,30 +1,41 @@
 from flask import Flask, request, jsonify, send_from_directory
 import uuid
 import os
+from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 
 app = Flask(__name__)
 
 OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
 @app.route("/generate-video", methods=["POST"])
 def generate_video():
     data = request.get_json()
 
-    script = data.get("script", [])
     images = data.get("images", [])
     voice = data.get("voice", "")
 
     job_id = str(uuid.uuid4())
+    output_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
 
-    file_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
+    # 🎬 تحويل الصور لفيديو
+    clips = []
+    for img in images:
+        clip = ImageClip(img).set_duration(2)
+        clips.append(clip)
 
-    # ⚠️ مؤقت: ملف فيديو وهمي
-    with open(file_path, "w") as f:
-        f.write("FAKE VIDEO FILE")
+    video = concatenate_videoclips(clips, method="compose")
+
+    # 🎧 إضافة صوت إذا موجود
+    if voice:
+        audio = AudioFileClip(voice)
+        video = video.set_audio(audio)
+
+    video.write_videofile(output_path, fps=24)
 
     return jsonify({
-        "status": "processing",
+        "status": "done",
         "job_id": job_id,
         "video_url": f"/download/{job_id}.mp4"
     })
