@@ -14,20 +14,17 @@ def generate_video():
     data = request.get_json()
 
     images = data.get("images", [])
-    voice = data.get("voice", "")
 
     job_id = str(uuid.uuid4())
 
     video_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
     list_path = os.path.join(OUTPUT_DIR, f"{job_id}.txt")
 
-    # نحول الصور إلى ملف ffmpeg list
     with open(list_path, "w") as f:
         for img in images:
             f.write(f"file '{img}'\n")
             f.write("duration 2\n")
 
-    # تشغيل ffmpeg
     cmd = [
         "ffmpeg",
         "-y",
