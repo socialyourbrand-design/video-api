@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 import uuid
 import os
-from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
+import subprocess
 
 app = Flask(__name__)
 
@@ -17,22 +17,29 @@ def generate_video():
     voice = data.get("voice", "")
 
     job_id = str(uuid.uuid4())
-    output_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
 
-    # 🎬 تحويل الصور لفيديو
-    clips = []
-    for img in images:
-        clip = ImageClip(img).set_duration(2)
-        clips.append(clip)
+    video_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
+    list_path = os.path.join(OUTPUT_DIR, f"{job_id}.txt")
 
-    video = concatenate_videoclips(clips, method="compose")
+    # نحول الصور إلى ملف ffmpeg list
+    with open(list_path, "w") as f:
+        for img in images:
+            f.write(f"file '{img}'\n")
+            f.write("duration 2\n")
 
-    # 🎧 إضافة صوت إذا موجود
-    if voice:
-        audio = AudioFileClip(voice)
-        video = video.set_audio(audio)
+    # تشغيل ffmpeg
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_path,
+        "-vf", "scale=1280:720",
+        "-pix_fmt", "yuv420p",
+        video_path
+    ]
 
-    video.write_videofile(output_path, fps=24)
+    subprocess.run(cmd, check=True)
 
     return jsonify({
         "status": "done",
@@ -48,7 +55,7 @@ def download(file):
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok"})
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
