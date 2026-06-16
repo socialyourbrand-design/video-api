@@ -19,7 +19,7 @@ def generate_video():
 
     file_path = os.path.join(OUTPUT_DIR, f"{job_id}.mp4")
 
-    # ⚠️ هذا مؤقت (لأنك ما عندك توليد فيديو فعلي بعد)
+    # ⚠️ مؤقت: ملف فيديو وهمي
     with open(file_path, "w") as f:
         f.write("FAKE VIDEO FILE")
 
