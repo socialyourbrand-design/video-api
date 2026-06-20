@@ -1,2 +1,5 @@
 [phases.setup]
-nixPkgs = ["ffmpeg"]
+nixPkgs = ["ffmpeg", "python3", "python3Packages.pip"]
+
+[phases.install]
+commands = ["pip install flask gtts gunicorn"]
